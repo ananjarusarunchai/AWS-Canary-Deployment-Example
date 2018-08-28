@@ -1,0 +1,569 @@
+{
+  "service": {
+    "service": "canary-deployments-test",
+    "serviceObject": {
+      "name": "canary-deployments-test"
+    },
+    "provider": {
+      "stage": "dev",
+      "region": "us-east-1",
+      "variableSyntax": "\\${([ ~:a-zA-Z0-9._'\",\\-\\/\\(\\)]+?)}",
+      "name": "aws",
+      "runtime": "nodejs6.10",
+      "iamRoleStatements": [
+        {
+          "Effect": "Allow",
+          "Action": [
+            "codedeploy:*"
+          ],
+          "Resource": [
+            "*"
+          ]
+        }
+      ],
+      "versionFunctions": true,
+      "remoteFunctionData": null,
+      "compiledCloudFormationTemplate": {
+        "AWSTemplateFormatVersion": "2010-09-09",
+        "Description": "The AWS CloudFormation template for this Serverless application",
+        "Resources": {
+          "ServerlessDeploymentBucket": {
+            "Type": "AWS::S3::Bucket"
+          },
+          "HelloLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+              "LogGroupName": "/aws/lambda/canary-deployments-test-production-hello"
+            }
+          },
+          "PreHookLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+              "LogGroupName": "/aws/lambda/canary-deployments-test-production-preHook"
+            }
+          },
+          "PostHookLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+              "LogGroupName": "/aws/lambda/canary-deployments-test-production-postHook"
+            }
+          },
+          "IamRoleLambdaExecution": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+              "AssumeRolePolicyDocument": {
+                "Version": "2012-10-17",
+                "Statement": [
+                  {
+                    "Effect": "Allow",
+                    "Principal": {
+                      "Service": [
+                        "lambda.amazonaws.com"
+                      ]
+                    },
+                    "Action": [
+                      "sts:AssumeRole"
+                    ]
+                  }
+                ]
+              },
+              "Policies": [
+                {
+                  "PolicyName": {
+                    "Fn::Join": [
+                      "-",
+                      [
+                        "production",
+                        "canary-deployments-test",
+                        "lambda"
+                      ]
+                    ]
+                  },
+                  "PolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                      {
+                        "Effect": "Allow",
+                        "Action": [
+                          "logs:CreateLogStream"
+                        ],
+                        "Resource": [
+                          {
+                            "Fn::Sub": "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/canary-deployments-test-production-hello:*"
+                          },
+                          {
+                            "Fn::Sub": "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/canary-deployments-test-production-preHook:*"
+                          },
+                          {
+                            "Fn::Sub": "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/canary-deployments-test-production-postHook:*"
+                          }
+                        ]
+                      },
+                      {
+                        "Effect": "Allow",
+                        "Action": [
+                          "logs:PutLogEvents"
+                        ],
+                        "Resource": [
+                          {
+                            "Fn::Sub": "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/canary-deployments-test-production-hello:*:*"
+                          },
+                          {
+                            "Fn::Sub": "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/canary-deployments-test-production-preHook:*:*"
+                          },
+                          {
+                            "Fn::Sub": "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/canary-deployments-test-production-postHook:*:*"
+                          }
+                        ]
+                      },
+                      {
+                        "$ref": "$[\"service\"][\"provider\"][\"iamRoleStatements\"][0]"
+                      }
+                    ]
+                  }
+                }
+              ],
+              "Path": "/",
+              "RoleName": {
+                "Fn::Join": [
+                  "-",
+                  [
+                    "canary-deployments-test",
+                    "production",
+                    "us-east-2",
+                    "lambdaRole"
+                  ]
+                ]
+              }
+            }
+          },
+          "HelloLambdaFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+              "Code": {
+                "S3Bucket": {
+                  "Ref": "ServerlessDeploymentBucket"
+                },
+                "S3Key": "serverless/canary-deployments-test/production/1535436160590-2018-08-28T06:02:40.590Z/canary-deployments-test.zip"
+              },
+              "FunctionName": "canary-deployments-test-production-hello",
+              "Handler": "handler.hello",
+              "MemorySize": 1024,
+              "Role": {
+                "Fn::GetAtt": [
+                  "IamRoleLambdaExecution",
+                  "Arn"
+                ]
+              },
+              "Runtime": "nodejs6.10",
+              "Timeout": 6
+            },
+            "DependsOn": [
+              "HelloLogGroup",
+              "IamRoleLambdaExecution"
+            ]
+          },
+          "HelloLambdaVersionUj9v7pQes0UwCy9th3XeutbCmgtMjnHJoCr3URydmw": {
+            "Type": "AWS::Lambda::Version",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+              "FunctionName": {
+                "Ref": "HelloLambdaFunction"
+              },
+              "CodeSha256": "Ntzk+UHcUf4PW5Dh0/50TZH0lUSyroRRpUt6g+6f9UE="
+            }
+          },
+          "PreHookLambdaFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+              "Code": {
+                "S3Bucket": {
+                  "Ref": "ServerlessDeploymentBucket"
+                },
+                "S3Key": "serverless/canary-deployments-test/production/1535436160590-2018-08-28T06:02:40.590Z/canary-deployments-test.zip"
+              },
+              "FunctionName": "canary-deployments-test-production-preHook",
+              "Handler": "hooks.pre",
+              "MemorySize": 1024,
+              "Role": {
+                "Fn::GetAtt": [
+                  "IamRoleLambdaExecution",
+                  "Arn"
+                ]
+              },
+              "Runtime": "nodejs6.10",
+              "Timeout": 6
+            },
+            "DependsOn": [
+              "PreHookLogGroup",
+              "IamRoleLambdaExecution"
+            ]
+          },
+          "PreHookLambdaVersionBP7x8NMIUwjhw1B8jwLrlyqYo49hGQpFJ8cU2bMqgM": {
+            "Type": "AWS::Lambda::Version",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+              "FunctionName": {
+                "Ref": "PreHookLambdaFunction"
+              },
+              "CodeSha256": "Ntzk+UHcUf4PW5Dh0/50TZH0lUSyroRRpUt6g+6f9UE="
+            }
+          },
+          "PostHookLambdaFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+              "Code": {
+                "S3Bucket": {
+                  "Ref": "ServerlessDeploymentBucket"
+                },
+                "S3Key": "serverless/canary-deployments-test/production/1535436160590-2018-08-28T06:02:40.590Z/canary-deployments-test.zip"
+              },
+              "FunctionName": "canary-deployments-test-production-postHook",
+              "Handler": "hooks.post",
+              "MemorySize": 1024,
+              "Role": {
+                "Fn::GetAtt": [
+                  "IamRoleLambdaExecution",
+                  "Arn"
+                ]
+              },
+              "Runtime": "nodejs6.10",
+              "Timeout": 6
+            },
+            "DependsOn": [
+              "PostHookLogGroup",
+              "IamRoleLambdaExecution"
+            ]
+          },
+          "PostHookLambdaVersionvmmNa8id3sVYRsIOxW3igR5Xs4koP9dYyb0EhlUBZI": {
+            "Type": "AWS::Lambda::Version",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+              "FunctionName": {
+                "Ref": "PostHookLambdaFunction"
+              },
+              "CodeSha256": "Ntzk+UHcUf4PW5Dh0/50TZH0lUSyroRRpUt6g+6f9UE="
+            }
+          },
+          "ApiGatewayRestApi": {
+            "Type": "AWS::ApiGateway::RestApi",
+            "Properties": {
+              "Name": "production-canary-deployments-test",
+              "EndpointConfiguration": {
+                "Types": [
+                  "EDGE"
+                ]
+              }
+            }
+          },
+          "ApiGatewayResourceHello": {
+            "Type": "AWS::ApiGateway::Resource",
+            "Properties": {
+              "ParentId": {
+                "Fn::GetAtt": [
+                  "ApiGatewayRestApi",
+                  "RootResourceId"
+                ]
+              },
+              "PathPart": "hello",
+              "RestApiId": {
+                "Ref": "ApiGatewayRestApi"
+              }
+            }
+          },
+          "ApiGatewayMethodHelloGet": {
+            "Type": "AWS::ApiGateway::Method",
+            "Properties": {
+              "HttpMethod": "GET",
+              "RequestParameters": {},
+              "ResourceId": {
+                "Ref": "ApiGatewayResourceHello"
+              },
+              "RestApiId": {
+                "Ref": "ApiGatewayRestApi"
+              },
+              "ApiKeyRequired": false,
+              "AuthorizationType": "NONE",
+              "Integration": {
+                "IntegrationHttpMethod": "POST",
+                "Type": "AWS_PROXY",
+                "Uri": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:apigateway:",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      ":lambda:path/2015-03-31/functions/",
+                      {
+                        "Fn::GetAtt": [
+                          "HelloLambdaFunction",
+                          "Arn"
+                        ]
+                      },
+                      "/invocations"
+                    ]
+                  ]
+                }
+              },
+              "MethodResponses": []
+            }
+          },
+          "ApiGatewayDeployment1535436161444": {
+            "Type": "AWS::ApiGateway::Deployment",
+            "Properties": {
+              "RestApiId": {
+                "Ref": "ApiGatewayRestApi"
+              },
+              "StageName": "production"
+            },
+            "DependsOn": [
+              "ApiGatewayMethodHelloGet"
+            ]
+          },
+          "HelloLambdaPermissionApiGateway": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+              "FunctionName": {
+                "Fn::GetAtt": [
+                  "HelloLambdaFunction",
+                  "Arn"
+                ]
+              },
+              "Action": "lambda:InvokeFunction",
+              "Principal": "apigateway.amazonaws.com",
+              "SourceArn": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:execute-api:",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId"
+                    },
+                    ":",
+                    {
+                      "Ref": "ApiGatewayRestApi"
+                    },
+                    "/*/*"
+                  ]
+                ]
+              }
+            }
+          },
+          "SNSTopicSnsTopic": {
+            "Type": "AWS::SNS::Topic",
+            "Properties": {
+              "TopicName": "snsTopic",
+              "DisplayName": "",
+              "Subscription": [
+                {
+                  "Endpoint": {
+                    "Fn::GetAtt": [
+                      "HelloLambdaFunction",
+                      "Arn"
+                    ]
+                  },
+                  "Protocol": "lambda"
+                }
+              ]
+            }
+          },
+          "HelloLambdaPermissionSnsTopicSNS": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+              "FunctionName": {
+                "Fn::GetAtt": [
+                  "HelloLambdaFunction",
+                  "Arn"
+                ]
+              },
+              "Action": "lambda:InvokeFunction",
+              "Principal": "sns.amazonaws.com",
+              "SourceArn": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:sns:",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId"
+                    },
+                    ":",
+                    "snsTopic"
+                  ]
+                ]
+              }
+            }
+          },
+          "HelloFooAlarm": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "Properties": {
+              "Namespace": "AWS/Lambda",
+              "MetricName": "Errors",
+              "Threshold": 1,
+              "Period": 60,
+              "EvaluationPeriods": 1,
+              "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+              "OKActions": [],
+              "AlarmActions": [],
+              "InsufficientDataActions": [],
+              "Dimensions": [
+                {
+                  "Name": "FunctionName",
+                  "Value": {
+                    "Ref": "HelloLambdaFunction"
+                  }
+                }
+              ],
+              "TreatMissingData": "missing",
+              "Statistic": "Minimum"
+            }
+          },
+          "AlertsDashboard": {
+            "Type": "AWS::CloudWatch::Dashboard",
+            "Properties": {
+              "DashboardName": "canary-deployments-test-production-us-east-2",
+              "DashboardBody": "{\"widgets\":[{\"type\":\"metric\",\"x\":0,\"y\":0,\"width\":8,\"height\":6,\"properties\":{\"title\":\"Errors\",\"view\":\"timeSeries\",\"stacked\":false,\"metrics\":[[\"AWS/Lambda\",\"Errors\",\"FunctionName\",\"canary-deployments-test-production-hello\",{\"stat\":\"Sum\",\"period\":900,\"region\":\"us-east-2\",\"label\":\"hello\"}],[\"AWS/Lambda\",\"Errors\",\"FunctionName\",\"canary-deployments-test-production-preHook\",{\"stat\":\"Sum\",\"period\":900,\"region\":\"us-east-2\",\"label\":\"preHook\"}],[\"AWS/Lambda\",\"Errors\",\"FunctionName\",\"canary-deployments-test-production-postHook\",{\"stat\":\"Sum\",\"period\":900,\"region\":\"us-east-2\",\"label\":\"postHook\"}]],\"region\":\"us-east-2\",\"period\":300}},{\"type\":\"metric\",\"x\":8,\"y\":0,\"width\":6,\"height\":6,\"properties\":{\"title\":\"Errors\",\"view\":\"singleValue\",\"metrics\":[[\"AWS/Lambda\",\"Errors\",\"FunctionName\",\"canary-deployments-test-production-hello\",{\"stat\":\"Sum\",\"period\":2592000,\"region\":\"us-east-2\",\"label\":\"hello\"}],[\"AWS/Lambda\",\"Errors\",\"FunctionName\",\"canary-deployments-test-production-preHook\",{\"stat\":\"Sum\",\"period\":2592000,\"region\":\"us-east-2\",\"label\":\"preHook\"}],[\"AWS/Lambda\",\"Errors\",\"FunctionName\",\"canary-deployments-test-production-postHook\",{\"stat\":\"Sum\",\"period\":2592000,\"region\":\"us-east-2\",\"label\":\"postHook\"}]],\"region\":\"us-east-2\",\"period\":300}},{\"type\":\"metric\",\"x\":14,\"y\":0,\"width\":10,\"height\":6,\"properties\":{\"title\":\"Duration\",\"view\":\"timeSeries\",\"stacked\":false,\"metrics\":[[\"AWS/Lambda\",\"Duration\",\"FunctionName\",\"canary-deployments-test-production-hello\",{\"stat\":\"p50\",\"period\":900,\"region\":\"us-east-2\",\"label\":\"hello p50\"}],[\"AWS/Lambda\",\"Duration\",\"FunctionName\",\"canary-deployments-test-production-hello\",{\"stat\":\"p90\",\"period\":900,\"region\":\"us-east-2\",\"label\":\"hello p90\"}],[\"AWS/Lambda\",\"Duration\",\"FunctionName\",\"canary-deployments-test-production-preHook\",{\"stat\":\"p50\",\"period\":900,\"region\":\"us-east-2\",\"label\":\"preHook p50\"}],[\"AWS/Lambda\",\"Duration\",\"FunctionName\",\"canary-deployments-test-production-preHook\",{\"stat\":\"p90\",\"period\":900,\"region\":\"us-east-2\",\"label\":\"preHook p90\"}],[\"AWS/Lambda\",\"Duration\",\"FunctionName\",\"canary-deployments-test-production-postHook\",{\"stat\":\"p50\",\"period\":900,\"region\":\"us-east-2\",\"label\":\"postHook p50\"}],[\"AWS/Lambda\",\"Duration\",\"FunctionName\",\"canary-deployments-test-production-postHook\",{\"stat\":\"p90\",\"period\":900,\"region\":\"us-east-2\",\"label\":\"postHook p90\"}]],\"region\":\"us-east-2\",\"period\":300}},{\"type\":\"metric\",\"x\":0,\"y\":6,\"width\":8,\"height\":6,\"properties\":{\"title\":\"Invocations\",\"view\":\"timeSeries\",\"stacked\":false,\"metrics\":[[\"AWS/Lambda\",\"Invocations\",\"FunctionName\",\"canary-deployments-test-production-hello\",{\"stat\":\"Sum\",\"period\":900,\"region\":\"us-east-2\",\"label\":\"hello\"}],[\"AWS/Lambda\",\"Invocations\",\"FunctionName\",\"canary-deployments-test-production-preHook\",{\"stat\":\"Sum\",\"period\":900,\"region\":\"us-east-2\",\"label\":\"preHook\"}],[\"AWS/Lambda\",\"Invocations\",\"FunctionName\",\"canary-deployments-test-production-postHook\",{\"stat\":\"Sum\",\"period\":900,\"region\":\"us-east-2\",\"label\":\"postHook\"}]],\"region\":\"us-east-2\",\"period\":300}},{\"type\":\"metric\",\"x\":8,\"y\":6,\"width\":6,\"height\":6,\"properties\":{\"title\":\"Invocations\",\"view\":\"singleValue\",\"metrics\":[[\"AWS/Lambda\",\"Invocations\",\"FunctionName\",\"canary-deployments-test-production-hello\",{\"stat\":\"Sum\",\"period\":2592000,\"region\":\"us-east-2\",\"label\":\"hello\"}],[\"AWS/Lambda\",\"Invocations\",\"FunctionName\",\"canary-deployments-test-production-preHook\",{\"stat\":\"Sum\",\"period\":2592000,\"region\":\"us-east-2\",\"label\":\"preHook\"}],[\"AWS/Lambda\",\"Invocations\",\"FunctionName\",\"canary-deployments-test-production-postHook\",{\"stat\":\"Sum\",\"period\":2592000,\"region\":\"us-east-2\",\"label\":\"postHook\"}]],\"region\":\"us-east-2\",\"period\":300}},{\"type\":\"metric\",\"x\":14,\"y\":6,\"width\":10,\"height\":6,\"properties\":{\"title\":\"API Requests\",\"view\":\"timeSeries\",\"stacked\":false,\"metrics\":[[\"AWS/ApiGateway\",\"5XXError\",\"ApiName\",\"production-canary-deployments-test\",{\"stat\":\"Sum\",\"period\":900}],[\"AWS/ApiGateway\",\"4XXError\",\"ApiName\",\"production-canary-deployments-test\",{\"stat\":\"Sum\",\"period\":900}],[\"AWS/ApiGateway\",\"Count\",\"ApiName\",\"production-canary-deployments-test\",{\"stat\":\"Sum\",\"period\":900}]],\"region\":\"us-east-2\"}},{\"type\":\"metric\",\"x\":0,\"y\":12,\"width\":8,\"height\":6,\"properties\":{\"title\":\"Throttles\",\"view\":\"timeSeries\",\"stacked\":false,\"metrics\":[[\"AWS/Lambda\",\"Throttles\",\"FunctionName\",\"canary-deployments-test-production-hello\",{\"stat\":\"Sum\",\"period\":900,\"region\":\"us-east-2\",\"label\":\"hello\"}],[\"AWS/Lambda\",\"Throttles\",\"FunctionName\",\"canary-deployments-test-production-preHook\",{\"stat\":\"Sum\",\"period\":900,\"region\":\"us-east-2\",\"label\":\"preHook\"}],[\"AWS/Lambda\",\"Throttles\",\"FunctionName\",\"canary-deployments-test-production-postHook\",{\"stat\":\"Sum\",\"period\":900,\"region\":\"us-east-2\",\"label\":\"postHook\"}]],\"region\":\"us-east-2\",\"period\":300}},{\"type\":\"metric\",\"x\":8,\"y\":12,\"width\":6,\"height\":6,\"properties\":{\"title\":\"Throttles\",\"view\":\"singleValue\",\"metrics\":[[\"AWS/Lambda\",\"Throttles\",\"FunctionName\",\"canary-deployments-test-production-hello\",{\"stat\":\"Sum\",\"period\":2592000,\"region\":\"us-east-2\",\"label\":\"hello\"}],[\"AWS/Lambda\",\"Throttles\",\"FunctionName\",\"canary-deployments-test-production-preHook\",{\"stat\":\"Sum\",\"period\":2592000,\"region\":\"us-east-2\",\"label\":\"preHook\"}],[\"AWS/Lambda\",\"Throttles\",\"FunctionName\",\"canary-deployments-test-production-postHook\",{\"stat\":\"Sum\",\"period\":2592000,\"region\":\"us-east-2\",\"label\":\"postHook\"}]],\"region\":\"us-east-2\",\"period\":300}},{\"type\":\"metric\",\"x\":14,\"y\":12,\"width\":10,\"height\":6,\"properties\":{\"title\":\"API Latency\",\"view\":\"timeSeries\",\"stacked\":false,\"metrics\":[[\"AWS/ApiGateway\",\"IntegrationLatency\",\"ApiName\",\"production-canary-deployments-test\",{\"stat\":\"p50\",\"period\":900,\"region\":\"us-east-2\"}],[\"AWS/ApiGateway\",\"Latency\",\"ApiName\",\"production-canary-deployments-test\",{\"stat\":\"p50\",\"period\":900,\"region\":\"us-east-2\"}],[\"AWS/ApiGateway\",\"IntegrationLatency\",\"ApiName\",\"production-canary-deployments-test\",{\"stat\":\"p90\",\"period\":900,\"region\":\"us-east-2\"}],[\"AWS/ApiGateway\",\"Latency\",\"ApiName\",\"production-canary-deployments-test\",{\"stat\":\"p90\",\"period\":900,\"region\":\"us-east-2\"}]],\"region\":\"us-east-2\"}}]}"
+            }
+          }
+        },
+        "Outputs": {
+          "ServerlessDeploymentBucketName": {
+            "Value": {
+              "Ref": "ServerlessDeploymentBucket"
+            }
+          },
+          "HelloLambdaFunctionQualifiedArn": {
+            "Description": "Current Lambda function version",
+            "Value": {
+              "Ref": "HelloLambdaVersionUj9v7pQes0UwCy9th3XeutbCmgtMjnHJoCr3URydmw"
+            }
+          },
+          "PreHookLambdaFunctionQualifiedArn": {
+            "Description": "Current Lambda function version",
+            "Value": {
+              "Ref": "PreHookLambdaVersionBP7x8NMIUwjhw1B8jwLrlyqYo49hGQpFJ8cU2bMqgM"
+            }
+          },
+          "PostHookLambdaFunctionQualifiedArn": {
+            "Description": "Current Lambda function version",
+            "Value": {
+              "Ref": "PostHookLambdaVersionvmmNa8id3sVYRsIOxW3igR5Xs4koP9dYyb0EhlUBZI"
+            }
+          },
+          "ServiceEndpoint": {
+            "Description": "URL of the service endpoint",
+            "Value": {
+              "Fn::Join": [
+                "",
+                [
+                  "https://",
+                  {
+                    "Ref": "ApiGatewayRestApi"
+                  },
+                  ".execute-api.us-east-2.amazonaws.com/production"
+                ]
+              ]
+            }
+          }
+        }
+      },
+      "coreCloudFormationTemplate": {
+        "AWSTemplateFormatVersion": "2010-09-09",
+        "Description": "The AWS CloudFormation template for this Serverless application",
+        "Resources": {
+          "ServerlessDeploymentBucket": {
+            "Type": "AWS::S3::Bucket"
+          }
+        },
+        "Outputs": {
+          "ServerlessDeploymentBucketName": {
+            "Value": {
+              "Ref": "ServerlessDeploymentBucket"
+            }
+          }
+        }
+      },
+      "vpc": {}
+    },
+    "custom": {
+      "alerts": {
+        "dashboards": true
+      },
+      "deploymentSettings": {
+        "stages": [
+          "dev",
+          "prod"
+        ]
+      }
+    },
+    "plugins": [
+      "serverless-plugin-aws-alerts",
+      "serverless-plugin-canary-deployments"
+    ],
+    "functions": {
+      "hello": {
+        "handler": "handler.hello",
+        "events": [
+          {
+            "http": "GET hello"
+          },
+          {
+            "sns": "snsTopic"
+          }
+        ],
+        "alarms": [
+          {
+            "name": "foo",
+            "namespace": "AWS/Lambda",
+            "metric": "Errors",
+            "threshold": 1,
+            "statistic": "Minimum",
+            "period": 60,
+            "evaluationPeriods": 1,
+            "comparisonOperator": "GreaterThanOrEqualToThreshold"
+          }
+        ],
+        "deploymentSettings": {
+          "type": "Linear10PercentEvery1Minutes",
+          "alias": "Live",
+          "preTrafficHook": "preHook",
+          "postTrafficHook": "postHook",
+          "alarms": [
+            "HelloFooAlarm"
+          ]
+        },
+        "name": "canary-deployments-test-production-hello",
+        "package": {},
+        "vpc": {}
+      },
+      "preHook": {
+        "handler": "hooks.pre",
+        "events": [],
+        "name": "canary-deployments-test-production-preHook",
+        "package": {},
+        "vpc": {}
+      },
+      "postHook": {
+        "handler": "hooks.post",
+        "events": [],
+        "name": "canary-deployments-test-production-postHook",
+        "package": {},
+        "vpc": {}
+      }
+    },
+    "artifact": "C:\\Users\\u6021293\\Documents\\AWS\\serverless-canary-depolyment\\.serverless\\canary-deployments-test.zip"
+  },
+  "package": {
+    "artifactDirectoryName": "serverless/canary-deployments-test/production/1535436160590-2018-08-28T06:02:40.590Z",
+    "artifact": "canary-deployments-test.zip"
+  }
+}
